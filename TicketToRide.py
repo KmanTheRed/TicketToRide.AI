@@ -3,6 +3,191 @@ import networkx as nx
 import matplotlib.pyplot as plt
 from mpl_toolkits.basemap import Basemap
 
+city_coordinates = {
+    'Seattle': (47.608013,-122.335167),
+    'Portland': (45.5051, -122.6750),
+    'San Francisco': (37.7749, -122.4194),
+    'Los Angeles': (34.0522, -118.2437),
+    'Las Vegas': (36.1699, -115.1398),
+    'Salt Lake City': (40.7608, -111.8910),
+    'Helena': (46.595806, -112.027031),
+    'Duluth': (46.786671, -92.100487),
+    'Omaha': (41.2565, -95.9345),
+    'Denver': (39.7392, -104.9903),
+    'Kansas City': (39.0997, -94.5786),
+    'Oklahoma City': (35.4676, -97.5164),
+    'Dallas': (32.7767, -96.7970),
+    'Houston': (29.7604, -95.3698),
+    'El Paso': (31.7619, -106.4850),
+    'Santa Fe': (35.6869, -105.9378),
+    'Phoenix': (33.4484, -112.0740),
+    'Little Rock': (34.7465, -92.2896),
+    'Chicago': (41.8781, -87.6298),
+    'St. Louis': (38.6270, -90.1994),
+    'Pittsburgh': (40.4406, -79.9959),
+    'Nashville': (36.1627, -86.7816),
+    'Atlanta': (33.7490, -84.3880),
+    'Miami': (25.7617, -80.1918),
+    'New York': (40.7128, -74.0060),
+    'Boston': (42.3601, -71.0589),
+    'Montreal': (45.5017, -73.5673),
+    'Toronto': (43.6532, -79.3832),
+    'Sault Ste. Marie': (46.5215, -84.3467),
+    'Winnipeg': (49.8951, -97.1384),
+    'Raleigh': (35.7796, -78.6382),
+    'Washington': (38.8951, -77.0364),
+    'Charleston': (32.7765, -79.9311),
+    'New Orleans': (29.9511, -90.0715),
+    'Calgary': (51.0447, -114.0719),
+    'Vancouver': (49.2827, -123.1207),
+}
+edges = [ ('Vancouver', 'Seattle', {'color': 'Gray', 'length': 1}),
+    ('Seattle', 'Vancouver', {'color': 'Gray', 'length': 1}), #Second Gray track
+    ('Seattle', 'Portland', {'color': 'Gray', 'length': 1}),     
+    ('Portland', 'Seattle', {'color': 'Gray', 'length': 1}),  # Second gray track
+    ('Portland', 'San Francisco', {'color': 'Green', 'length': 5}),
+    ('San Francisco', 'Portland', {'color': 'Pink', 'length': 5}),
+    ('Los Angeles', 'Phoenix', {'color': 'Gray', 'length': 3}),
+    ('Phoenix', 'Santa Fe', {'color': 'Gray', 'length': 3}),
+    ('Santa Fe', 'Denver', {'color': 'Gray', 'length': 2}),
+    ('Denver', 'Omaha', {'color': 'Pink', 'length': 4}),
+    ('Omaha', 'Chicago', {'color': 'Blue', 'length': 4}),
+    ('Las Vegas', 'Salt Lake City', {'color': 'Orange', 'length': 3}),
+    ('Los Angeles', 'Las Vegas', {'color': 'Gray', 'length': 2}),
+    ('Salt Lake City', 'Helena', {'color': 'Pink', 'length': 3}),
+    ('Helena', 'Winnipeg', {'color': 'Blue', 'length': 4}),
+    ('Winnipeg', 'Sault Ste. Marie', {'color': 'Gray', 'length': 6}),
+    ('Los Angeles', 'San Francisco', {'color': 'Pink', 'length': 3}),
+    ('San Francisco', 'Los Angeles', {'color': 'Yellow', 'length': 3}),
+    ('San Francisco', 'Salt Lake City', {'color': 'Orange', 'length': 5}),
+    ('Salt Lake City', 'San Francisco', {'color': (0.95, 0.95, 0.95), 'length': 5}),
+    ('Montreal', 'Boston', {'color': 'Gray', 'length': 2}),
+    ('Boston', 'Montreal', {'color': 'Gray', 'length': 2}), #second
+    ('Montreal', 'New York', {'color': 'Blue', 'length': 3}),
+    ('Los Angeles', 'El Paso', {'color': 'Black', 'length': 6}),
+    ('El Paso', 'Houston', {'color': 'Green', 'length': 6}),
+    ('Houston', 'New Orleans', {'color': 'Gray', 'length': 2}),
+    ('New Orleans', 'Miami', {'color': 'Red', 'length': 6}),
+    ('Miami', 'Charleston', {'color': 'Pink', 'length': 4}),
+    ('Washington', 'New York', {'color': 'Black', 'length': 2}),
+    ('New York', 'Washington', {'color': 'Orange', 'length': 2}),
+    ('New York', 'Boston', {'color': 'Yellow', 'length': 2}),
+    ('Boston', 'New York', {'color': 'Red', 'length': 2}),
+    ('Seattle', 'Calgary', {'color': 'Gray', 'length': 4}),
+    ('Calgary', 'Winnipeg', {'color': (0.95, 0.95, 0.95), 'length': 6}),
+    ('Sault Ste. Marie', 'Montreal', {'color': 'Black', 'length': 5}),
+    ('Duluth', 'Sault Ste. Marie', {'color': 'Gray', 'length': 3}),
+    ('Sault Ste. Marie', 'Toronto', {'color': 'Gray', 'length': 2}),
+    ('Toronto', 'Chicago', {'color': (0.95, 0.95, 0.95), 'length': 4}),
+    ('Calgary', 'Vancouver', {'color': 'Gray', 'length': 3}),
+  ('Seattle', 'Helena', {'color': 'Yellow', 'length': 6}),
+  ('Helena', 'Duluth', {'color': 'Orange', 'length': 6}),
+  ('Helena', 'Denver', {'color': 'Green', 'length': 4}),
+  ('Helena', 'Omaha', {'color': 'Red', 'length': 5}),
+  ('Portland', 'Salt Lake City', {'color': 'Blue', 'length': 6}),
+  ('Calgary', 'Helena', {'color': 'Gray', 'length': 4}),
+  ('Winnipeg', 'Duluth', {'color': 'Black', 'length': 4}),
+  ('Duluth', 'Toronto', {'color': 'Pink', 'length': 6}),
+  ('Duluth', 'Omaha', {'color': 'Gray', 'length': 2}),
+  ('Omaha', 'Duluth', {'color': 'Gray', 'length': 2}), #secondGrayRoute
+  ('Duluth', 'Chicago', {'color': 'Red', 'length': 3}),
+  ('Toronto', 'Pittsburgh', {'color': 'Gray', 'length': 2}),
+  ('Toronto', 'Montreal', {'color': 'Gray', 'length': 3}),
+  ('Salt Lake City', 'Denver', {'color': 'Red', 'length': 3}),
+  ('Denver', 'Salt Lake City', {'color': 'Yellow', 'length': 3}),
+  ('Denver', 'Kansas City', {'color': 'Black', 'length': 4}),
+  ('Kansas City', 'Denver', {'color': 'Orange', 'length': 4}),
+  ('Kansas City', 'St. Louis', {'color': 'Blue', 'length': 2}),
+  ('St. Louis', 'Kansas City', {'color': 'Pink', 'length': 2}),
+  ('Omaha', 'Kansas City', {'color': 'Gray', 'length': 1}),
+  ('Kansas City', 'Omaha', {'color': 'Gray', 'length': 1}), #second route
+  ('Chicago', 'St. Louis', {'color': 'Green', 'length': 2}),
+  ('St. Louis', 'Chicago', {'color': (0.95, 0.95, 0.95), 'length': 2}), 
+  ('Chicago', 'Pittsburgh', {'color': 'Black', 'length': 3}), 
+  ('Pittsburgh', 'Chicago', {'color': 'Orange', 'length': 3}), 
+  ('St. Louis', 'Pittsburgh', {'color': 'Green', 'length': 5}), 
+  ('Pittsburgh', 'New York', {'color': 'Green', 'length': 2}), 
+  ('New York', 'Pittsburgh', {'color': (0.95, 0.95, 0.95), 'length': 2}), 
+  ('Pittsburgh', 'Washington', {'color': 'Gray', 'length': 2}), 
+  ('Pittsburgh', 'Raleigh', {'color': 'Gray', 'length': 2}), 
+  ('Pittsburgh', 'Nashville', {'color': 'Yellow', 'length': 4}), 
+  ('Washington', 'Raleigh', {'color': 'Gray', 'length': 2}), 
+  ('Raleigh', 'Washington', {'color': 'Gray', 'length': 2}), #second route
+  ('Raleigh', 'Charleston', {'color': 'Gray', 'length': 2}), 
+  ('Raleigh', 'Atlanta', {'color': 'Gray', 'length': 2}), 
+  ('Atlanta', 'Raleigh', {'color': 'Gray', 'length': 2}), #secondRoute
+  ('Nashville', 'Raleigh', {'color': 'Black', 'length': 3}), 
+  ('Atlanta', 'Charleston', {'color': 'Gray', 'length': 2}), 
+  ('Nashville', 'Atlanta', {'color': 'Gray', 'length': 1}),
+  ('Atlanta', 'New Orleans', {'color': 'Yellow', 'length': 4}),
+  ('New Orleans', 'Atlanta', {'color': 'Orange', 'length': 4}),
+  ('Little Rock', 'New Orleans', {'color': 'Green', 'length': 3}),
+  ('Little Rock', 'Nashville', {'color': (0.95, 0.95, 0.95), 'length': 3}),
+  ('St. Louis', 'Nashville', {'color': 'Gray', 'length': 2}), 
+  ('St. Louis', 'Little Rock', {'color': 'Gray', 'length': 2}), 
+  ('Kansas City', 'Oklahoma City', {'color': 'Gray', 'length': 2}), 
+  ('Oklahoma City', 'Kansas City', {'color': 'Gray', 'length': 2}), #second
+  ('Oklahoma City', 'Little Rock', {'color': 'Gray', 'length': 2}), 
+  ('Oklahoma City', 'Dallas', {'color': 'Gray', 'length': 2}), 
+  ('Dallas', 'Oklahoma City', {'color': 'Gray', 'length': 2}),#second
+  ('Dallas', 'Little Rock', {'color': 'Gray', 'length': 2}),
+  ('Dallas', 'Houston', {'color': 'Gray', 'length': 1}),
+  ('Houston', 'Dallas', {'color': 'Gray', 'length': 1}), #second
+  ('El Paso', 'Dallas', {'color': 'Red', 'length': 4}), 
+  ('El Paso', 'Oklahoma City', {'color': 'Yellow', 'length': 5}), 
+  ('Santa Fe', 'Oklahoma City', {'color': 'Blue', 'length': 3}),
+  ('Denver', 'Oklahoma City', {'color': 'Red', 'length': 4}),
+  ('Santa Fe', 'El Paso', {'color': 'Gray', 'length': 2}),
+  ('Phoenix', 'Denver', {'color': (0.95, 0.95, 0.95), 'length': 5}),
+  ('Phoenix', 'El Paso', {'color': 'Gray', 'length': 3}),
+  ('Atlanta', 'Miami', {'color': 'Blue', 'length': 5})]
+
+def findIndex(originCity, destinationCity, color):
+    # This function takes in the origin city, destination city, and color of the route.
+    #It then finds the index of the route in the edges list.
+        for edge in edges:
+            if (edge[0] == originCity and edge[1] == destinationCity) or \
+                (edge[0] == destinationCity and edge[1] == originCity):
+                if edge[2]['color'] == color:
+                    return edges.index(edge)  
+            return -1
+def seeMap():
+    G = nx.DiGraph() 
+    m = Basemap(projection='merc', llcrnrlat=25, urcrnrlat=52, llcrnrlon=-130, urcrnrlon=-60, resolution='l')
+
+    for city, coordinates in city_coordinates.items():
+        x, y = m(coordinates[1], coordinates[0])
+        G.add_node(city, pos=(x, y))
+    G.add_edges_from(edges)
+
+    # Set up the Basemap
+    fig, ax = plt.subplots(figsize=(12, 10))
+    m.drawcountries()
+    m.drawcoastlines()
+
+    # Draw nodes
+    pos = nx.get_node_attributes(G, 'pos')
+    nx.draw_networkx_nodes(G, pos, ax=ax, node_size=100, node_color='red')
+
+    edge_colors = [edge[2]['color'] for edge in G.edges(data=True)]
+    background_color = '#c0c0c0'  # Replace with your desired background color
+    rect = plt.Rectangle((m.xmin, m.ymin), m.xmax - m.xmin, m.ymax - m.ymin, color=background_color)
+    ax.add_patch(rect)
+
+    nx.draw(G, pos, with_labels=True, connectionstyle='arc3, rad=0.1', edgelist=G.edges(), edge_color=edge_colors, width=[edge[2]['length'] for edge in G.edges(data=True)])
+
+    edge_labels = {(edge[0], edge[1]): edge[2]['length'] for edge in G.edges(data=True)}
+    nx.draw_networkx_edge_labels(G, pos, edge_labels=edge_labels)
+
+    # Draw edges using nx.draw_networkx_edges with custom attributes
+    plt.title('Ticket To Ride')
+
+    plt.show()
+
+
+
+
+
 class TicketToRideDeck:
     def shuffleDeck(self, drawPile):
       random.shuffle(drawPile)
@@ -50,19 +235,58 @@ class Player:
         self.personalDeck = []
         self.personalRoutes = []
         self.personalTracks = []
-        self.G = nx.Graph()
-        self.cities = [
-'Seattle', 'Portland', 'San Francisco', 'Los Angeles', 'Las Vegas', 'Salt Lake City',
-'Helena', 'Duluth', 'Omaha', 'Denver', 'Kansas City', 'Oklahoma City', 'Dallas', 'Houston',
-'El Paso', 'Santa Fe', 'Phoenix', 'Little Rock', 'Chicago', 'St. Louis', 'Pittsburgh',
-'Nashville', 'Atlanta', 'Miami', 'New York', 'Boston', 'Montreal', 'Toronto', 'Sault Ste. Marie',
-'Winnipeg',  'Raleigh', 'Washington', 'Charleston', 'New Orleans', 'Calgary', 'Vancouver']
-        self.G.add_nodes_from(self.cities)
+        self.G = nx.DiGraph()
+        self.cities = city_coordinates
         self.trainCount = 45
+        self.m  = Basemap(projection='merc', llcrnrlat=25, urcrnrlat=52, llcrnrlon=-130, urcrnrlon=-60, resolution='l')
+        for city, coordinates in city_coordinates.items():
+            x, y = self.m(coordinates[1], coordinates[0])
+            self.G.add_node(city, pos=(x, y))
 
 
 
-      
+
+    def addEdges(self, originCity, destinationCity, color):
+       k = edges[findIndex(originCity, destinationCity, color)] 
+       self.edges2.append(k)
+       self.G.add_edge(k)
+
+
+
+    def seeBoard(self):
+        # Set up the Basemap
+        fig, ax = plt.subplots(figsize=(12, 10))
+        self.m.drawcountries()
+        self.m.drawcoastlines()
+
+        # Draw nodes
+        pos = nx.get_node_attributes(self.G, 'pos')
+        nx.draw_networkx_nodes(self.G, pos, ax=ax, node_size=100, node_color='red')
+
+        edge_colors = [edge[2]['color'] for edge in self.G.edges(data=True)]
+        background_color = '#c0c0c0'  # Replace with your desired background color
+        rect = plt.Rectangle((self.m.xmin, self.m.ymin), self.m.xmax - self.m.xmin, self.m.ymax - self.m.ymin, color=background_color)
+        ax.add_patch(rect)
+
+        nx.draw(self.G, pos, with_labels=True, connectionstyle='arc3, rad=0.1', edgelist=self.G.edges(), edge_color=edge_colors, width=[edge[2]['length'] for edge in self.G.edges(data=True)])
+
+        edge_labels = {(edge[0], edge[1]): edge[2]['length'] for edge in self.G.edges(data=True)}
+        nx.draw_networkx_edge_labels(self.G, pos, edge_labels=edge_labels)
+
+        # Draw edges using nx.draw_networkx_edges with custom attributes
+        plt.title('Board Progress')
+
+        plt.show()
+
+
+
+
+
+
+
+
+
+
 class Routes:
     def __init__(self):
         self.route_points = {
@@ -150,7 +374,7 @@ class Game:
         self.gameEnd = False
         self.num_players = num_players
         self.players = [Player() for i in range(num_players)]
-        self.order = 1
+        self.order = 0
         #use order variable to designate which player's turn it will be 
         self.gameRoutes = Routes()
         self.gameDeck = TicketToRideDeck()
@@ -161,7 +385,7 @@ class Game:
         if(choice == 1):
           self.players[self.order].personalDeck.extend(self.gameDeck.takeCards(j, k))
         elif(choice == 2):
-          
+
           self.players[self.order].personalRoutes.extend(self.gameRoutes.takeRoutes(j))
         elif(choice == 3):
           self.players[self.order].trainCount -= (j + k)
@@ -174,10 +398,12 @@ class Game:
           for p in range(k):
             self.players[self.order].personalDeck.remove("Rainbow")
           self.discardPile += [l] * j + ["Rainbow"] * k
+
+
         elif(choice == 4):
           print("Player has forfeighted turn!")
-        if(self.order == self.num_players):
-            self.order = 1
+        if(self.order == self.num_players-1):
+            self.order = 0
         else:
             self.order += 1
 
@@ -185,187 +411,143 @@ class Game:
 
 class Board:
     def __init__(self):
-        self.G = nx.Graph()
-        self.cities = [
-    'Seattle', 'Portland', 'San Francisco', 'Los Angeles', 'Las Vegas', 'Salt Lake City',
-    'Helena', 'Duluth', 'Omaha', 'Denver', 'Kansas City', 'Oklahoma City', 'Dallas', 'Houston',
-    'El Paso', 'Santa Fe', 'Phoenix', 'Little Rock', 'Chicago', 'St. Louis', 'Pittsburgh',
-    'Nashville', 'Atlanta', 'Miami', 'New York', 'Boston', 'Montreal', 'Toronto', 'Sault Ste. Marie',
-    'Winnipeg',  'Raleigh', 'Washington', 'Charleston', 'New Orleans', 'Calgary', 'Vancouver']
-        self.G.add_nodes_from(self.cities)
-        self.edges = [
-          ('Vancouver', 'Seattle', {'color': 'Gray', 'length': 1}),
-          ('Vancouver', 'Seattle', {'color': 'Gray', 'length': 1}), #Second Gray track
-          ('Seattle', 'Portland', {'color': 'Gray', 'length': 1}),     
-          ('Seattle', 'Portland', {'color': 'Gray', 'length': 1}),  # Second gray track
-          ('Portland', 'San Francisco', {'color': 'Green', 'length': 5}),
-          ('Portland', 'San Francisco', {'color': 'Pink', 'length': 5}),
-          ('Los Angeles', 'Phoenix', {'color': 'Gray', 'length': 3}),
-          ('Phoenix', 'Santa Fe', {'color': 'Gray', 'length': 3}),
-          ('Santa Fe', 'Denver', {'color': 'Gray', 'length': 2}),
-          ('Denver', 'Omaha', {'color': 'Pink', 'length': 4}),
-          ('Omaha', 'Chicago', {'color': 'Blue', 'length': 4}),
-          ('Las Vegas', 'Salt Lake City', {'color': 'Orange', 'length': 3}),
-          ('Salt Lake City', 'Helena', {'color': 'Pink', 'length': 3}),
-          ('Helena', 'Winnipeg', {'color': 'Blue', 'length': 4}),
-          ('Winnipeg', 'Sault Ste. Marie', {'color': 'Gray', 'length': 6}),
-          ('Los Angeles', 'San Francisco', {'color': 'Pink', 'length': 3}),
-          ('Los Angeles', 'San Francisco', {'color': 'Yellow', 'length': 3}),
-          ('San Francisco', 'Salt Lake City', {'color': 'Orange', 'length': 5}),
-          ('San Francisco', 'Salt Lake City', {'color': 'White', 'length': 5}),
-          ('Montreal', 'Boston', {'color': 'Gray', 'length': 2}),
-          ('Montreal', 'Boston', {'color': 'Gray', 'length': 2}), #second
-          ('Montreal', 'New York', {'color': 'Blue', 'length': 3}),
-          ('Los Angeles', 'El Paso', {'color': 'Black', 'length': 6}),
-          ('El Paso', 'Houston', {'color': 'Green', 'length': 6}),
-          ('Houston', 'New Orleans', {'color': 'Gray', 'length': 2}),
-          ('New Orleans', 'Miami', {'color': 'Red', 'length': 6}),
-          ('Miami', 'Charleston', {'color': 'Pink', 'length': 4}),
-          ('Washington', 'New York', {'color': 'Black', 'length': 2}),
-          ('Washington', 'New York', {'color': 'Orange', 'length': 2}),
-          ('New York', 'Boston', {'color': 'Yellow', 'length': 2}),
-          ('New York', 'Boston', {'color': 'Red', 'length': 2}),
-          ('Seattle', 'Calgary', {'color': 'Gray', 'length': 4}),
-          ('Calgary', 'Winnipeg', {'color': 'White', 'length': 6}),
-          ('Sault Ste. Marie', 'Montreal', {'color': 'Black', 'length': 5}),
-          ('Duluth', 'Sault Ste. Marie', {'color': 'Gray', 'length': 3}),
-          ('Sault Ste. Marie', 'Toronto', {'color': 'Gray', 'length': 2}),
-          ('Toronto', 'Chicago', {'color': 'White', 'length': 4}),
-          ('Calgary', 'Vancouver', {'color': 'Gray', 'length': 3}),
-        ('Calgary', 'Seattle', {'color': 'Gray', 'length': 4}),
-        ('Seattle', 'Helena', {'color': 'Yellow', 'length': 6}),
-        ('Helena', 'Duluth', {'color': 'Orange', 'length': 6}),
-        ('Helena', 'Denver', {'color': 'Green', 'length': 4}),
-        ('Helena', 'Omaha', {'color': 'Red', 'length': 5}),
-        ('Portland', 'Salt Lake City', {'color': 'Blue', 'length': 6}),
-        ('Calgary', 'Helena', {'color': 'Gray', 'length': 4}),
-        ('Winnipeg', 'Duluth', {'color': 'Black', 'length': 4}),
-        ('Duluth', 'Toronto', {'color': 'Pink', 'length': 6}),
-        ('Duluth', 'Omaha', {'color': 'Gray', 'length': 2}),
-        ('Duluth', 'Omaha', {'color': 'Gray', 'length': 2}), #secondGrayRoute
-        ('Duluth', 'Chicago', {'color': 'Red', 'length': 3}),
-        ('Toronto', 'Pittsburgh', {'color': 'Gray', 'length': 3}),
-        ('Toronto', 'Montreal', {'color': 'Gray', 'length': 3}),
-        ('Salt Lake City', 'Denver', {'color': 'Red', 'length': 3}),
-        ('Salt Lake City', 'Denver', {'color': 'Yellow', 'length': 3}),
-        ('Denver', 'Kansas City', {'color': 'Black', 'length': 4}),
-        ('Denver', 'Kansas City', {'color': 'Orange', 'length': 4}),
-        ('Kansas City', 'Saint Louis', {'color': 'Blue', 'length': 2}),
-        ('Kansas City', 'Saint Louis', {'color': 'Pink', 'length': 2}),
-        ('Omaha', 'Kansas City', {'color': 'Gray', 'length': 1}),
-        ('Omaha', 'Kansas City', {'color': 'Gray', 'length': 1}), #second route
-        ('Chicago', 'Saint Louis', {'color': 'Green', 'length': 2}),
-        ('Chicago', 'Saint Louis', {'color': 'White', 'length': 2}), 
-        ('Chicago', 'Pittsburgh', {'color': 'Black', 'length': 3}), 
-        ('Chicago', 'Pittsburgh', {'color': 'Orange', 'length': 3}), 
-        ('Saint Louis', 'Pittsburgh', {'color': 'Green', 'length': 5}), 
-        ('Pittsburgh', 'New York', {'color': 'Green', 'length': 2}), 
-        ('Pittsburgh', 'New York', {'color': 'White', 'length': 2}), 
-        ('Pittsburgh', 'Washington', {'color': 'Gray', 'length': 2}), 
-        ('Pittsburgh', 'Raleigh', {'color': 'Gray', 'length': 2}), 
-        ('Pittsburgh', 'Nashville', {'color': 'Yellow', 'length': 4}), 
-        ('Washington', 'Raleigh', {'color': 'Gray', 'length': 2}), 
-        ('Washington', 'Raleigh', {'color': 'Gray', 'length': 2}), #second route
-        ('Raleigh', 'Charleston', {'color': 'Gray', 'length': 2}), 
-        ('Raleigh', 'Atlanta', {'color': 'Gray', 'length': 2}), 
-        ('Raleigh', 'Atlanta', {'color': 'Gray', 'length': 2}), #secondRoute
-        ('Nashville', 'Raleigh', {'color': 'Black', 'length': 3}), 
-        ('Atlanta', 'Charleston', {'color': 'Gray', 'length': 2}), 
-        ('Nashville', 'Atlanta', {'color': 'Gray', 'length': 1}),
-        ('Atlanta', 'New Orleans', {'color': 'Yellow', 'length': 4}),
-        ('Atlanta', 'New Orleans', {'color': 'Orange', 'length': 4}),
-        ('Little Rock', 'New Orleans', {'color': 'Green', 'length': 3}),
-        ('Little Rock', 'Nashville', {'color': 'White', 'length': 3}),
-        ('Saint Louis', 'Nashville', {'color': 'Gray', 'length': 2}), 
-        ('Saint Louis', 'Little Rock', {'color': 'Gray', 'length': 2}), 
-        ('Kansas City', 'Oklahoma City', {'color': 'Gray', 'length': 2}), 
-        ('Kansas City', 'Oklahoma City', {'color': 'Gray', 'length': 2}), #second
-        ('Oklahoma City', 'Litle Rock', {'color': 'Gray', 'length': 2}), 
-        ('Oklahoma City', 'Dallas', {'color': 'Gray', 'length': 2}), 
-        ('Oklahoma City', 'Dallas', {'color': 'Gray', 'length': 2}),#second
-        ('Dallas', 'Little Rock', {'color': 'Gray', 'length': 2}),
-        ('Dallas', 'Houston', {'color': 'Gray', 'length': 1}),
-        ('Dallas', 'Houston', {'color': 'Gray', 'length': 1}), #second
-        ('El Paso', 'Dallas', {'color': 'Red', 'length': 4}), 
-        ('El Paso', 'Oklahoma City', {'color': 'Yellow', 'length': 5}), 
-        ('Santa Fe', 'Oklahoma City', {'color': 'Blue', 'length': 3}),
-        ('Denver', 'Oklahoma City', {'color': 'Red', 'length': 4}),
-        ('Santa Fe', 'El Paso', {'color': 'Gray', 'length': 2}),
-        ('Phoenix', 'Denver', {'color': 'White', 'length': 5}),
-        ('Phoenix', 'El Paso', {'color': 'Gray', 'length': 3})
-        ]
-        self.G.add_edges_from(self.edges)
-        nx.draw(G, with_labels=True, font_size=8, node_size=500, node_color='skyblue', font_color='black', font_weight='bold', edge_color=[e[2]['color'] for e in G.edges(data=True)])
+        self.G = nx.DiGraph
+        self.nodes = city_coordinates
+        self.edges2 = []
+        self.m  = Basemap(projection='merc', llcrnrlat=25, urcrnrlat=52, llcrnrlon=-130, urcrnrlon=-60, resolution='l')
+
+        for city, coordinates in city_coordinates.items():
+            x, y = self.m(coordinates[1], coordinates[0])
+            self.G.add_node(city, pos=(x, y))
+
+
+
+
+    def addEdges(self, originCity, destinationCity, color):
+       k = edges[findIndex(originCity, destinationCity, color)] 
+       self.edges2.append(k)
+       self.G.add_edge(k)
+
+
+
+    def seeBoard(self):
+        # Set up the Basemap
+        fig, ax = plt.subplots(figsize=(12, 10))
+        self.m.drawcountries()
+        self.m.drawcoastlines()
+
+        # Draw nodes
+        pos = nx.get_node_attributes(self.G, 'pos')
+        nx.draw_networkx_nodes(self.G, pos, ax=ax, node_size=100, node_color='red')
+
+        edge_colors = [edge[2]['color'] for edge in self.G.edges(data=True)]
+        background_color = '#c0c0c0'  # Replace with your desired background color
+        rect = plt.Rectangle((self.m.xmin, self.m.ymin), self.m.xmax - self.m.xmin, self.m.ymax - self.m.ymin, color=background_color)
+        ax.add_patch(rect)
+
+        nx.draw(self.G, pos, with_labels=True, connectionstyle='arc3, rad=0.1', edgelist=self.G.edges(), edge_color=edge_colors, width=[edge[2]['length'] for edge in self.G.edges(data=True)])
+
+        edge_labels = {(edge[0], edge[1]): edge[2]['length'] for edge in self.G.edges(data=True)}
+        nx.draw_networkx_edge_labels(self.G, pos, edge_labels=edge_labels)
+
+        # Draw edges using nx.draw_networkx_edges with custom attributes
+        plt.title('Board Progress')
+
         plt.show()
-    def findIndex(self, originCity, destinationCity, color):
-    # This function takes in the origin city, destination city, and color of the route.
-    #It then finds the index of the route in the edges list.
-    
-        for edge in self.edges:
-            if (edge[0] == originCity and edge[1] == destinationCity) or \
-                (edge[0] == destinationCity and edge[1] == originCity):
-                if edge[2]['color'] == color:
-                    return self.edges.index(edge)  
-            return -1
-    
 
 
+
+
+
+
+
+def take_turn(theGame, playerResponse):
+    if playerResponse == 1:
+        # Logic for taking cards
+        print("Which cards would you like to take?(Format: X or X_Y)")
+        choice = str(input())
+        if len(choice) == 1:
+            theGame.Turn(1, int(choice), 0, 0)
+        else:
+            theGame.Turn(1, int(choice[0]), int(choice[2]), 0)
+    elif playerResponse == 2:
+        # Logic for taking routes
+        print("Which routes would you like to take?(Format: X, X_Y, or X_Y_Z")
+        choice = str(input())
+        if len(choice) == 1:
+            theGame.Turn(2, int(choice), 0, 0)
+        elif "1" in choice and "2" in choice and "3" in choice:
+            theGame.Turn(2, 7, 0, 0)
+        elif "1" in choice and "2" in choice:
+            theGame.Turn(2, 4, 0, 0)
+        elif "2" in choice and "3" in choice:
+            theGame.Turn(2, 5, 0, 0)
+        elif "1" in choice and "3" in choice:
+            theGame.Turn(2, 6, 0, 0)
+    elif playerResponse == 3:
+        # Logic for playing cards
+        print("Which track would you like to secure?(Format: Los Angeles to Miami")
+        i = -1
+        while i == -1:
+            choice = str(input())
+            cities = choice.split(" to ")
+            print("Which color would you like to use?")
+            color = str(input())
+            i = theGame.gameBoard.findIndex(cities[0], cities[1], color)
+            if i != -1:
+                print("Track not found, try again")
+            else:
+                print("How many cards and rainbows cards would you like to play? Format: X/Y")
+                b = True
+                while b:
+                    choice = str(input())
+                    if (
+                        theGame.players[theGame.order].count(color) > choice[0]
+                        and theGame.players[theGame.order].count("Rainbow") > choice[2]
+                    ):
+                        if int(choice[0]) + int(choice[2]) == theGame.gameBoard.edges[i][2]["length"]:
+                            b = False
+                            theGame.Turn(3, i, 0, 0)
+                            theGame.players[theGame.order].addEdges(
+                                edges[i][0], edges[i][1], edges[i][2]["color"]
+                            )
+                            theGame.gameBoard.addEdges(
+                                edges[i][0], edges[i][1], edges[i][2]["color"]
+                            )
+                        else:
+                            print("Wrong number of cards, try again")
+                    else:
+                        print("You do not have the right number of cards, make another selection")
+                        break
+                        break
+    elif playerResponse == 4:
+        theGame.Turn(4, 0, 0, 0)
+    elif playerResponse == 5:
+        seeMap()
+    elif playerResponse == 6:
+        theGame.gameBoard.seeBoard()
+    elif playerResponse == 7:
+        theGame.players[theGame.order].seeBoard()
+    else:
+        print("Invalid Choice, give a valid selection")
 
 print("How many players are there?")
 players = int(input())
 theGame = Game(players)
-while(theGame.gameEnd != True):
-  "Select an action, 1. Take Cards, 2. Take Routes, 3. Play Cards, 4. Forfeight"
-  playerResponse = int(input())
-  if(playerResponse == 1):
-    print("Which cards would you like to take?(Format: X or X_Y)")
-    choice = str(input())
-    if(len(choice) == 1):
-      theGame.Turn(1, int(choice), 0, 0)
-    else:
-      theGame.Turn(1, int(choice[0]), int(choice[2]), 0)
-  elif(playerResponse == 2):
-    print("Which routes would you like to take?(Format: X, X_Y, or X_Y_Z")
-    choice = str(input())
-    if(len(choice) == 1):
-      theGame.Turn(2, int(choice), 0, 0)
-    elif("1" in choice and "2" in choice and "3" in choice):
-      theGame.Turn(2, 7, 0, 0)
-    elif("1" in choice and "2" in choice):
-      theGame.Turn(2,4,0,0)
-    elif("2" in choice and "3" in choice):
-      theGame.Turn(2,5,0,0)
-    elif("1" in choice and "3" in choice):
-      theGame.Turn(2,6,0,0)
-  elif(playerResponse == 3):
-    print("Which track would you like to secure?(Format: Los Angeles to Miami")
-    i = -1
-    while(i == -1):
-      choice = str(input())
-      cities = choice.split(" to ")
-      print("Which color would you like to use?")
-      color = str(input())
-      i = theGame.gameBoard.findIndex(cities[0], cities[1], color)
-      if(i != -1):
-        print("Track not found, try again")
-      else:
-        print("How many cards and rainbows cards would you like to play? Format: X/Y")
-        b = True
-        while(b):
-          choice = str(input())
-          if(int(choice[0]) + int(choice[2])) == theGame.gameBoard.edges[i][2]['length']:
-              b = False
-        theGame.Turn(3,i,0,0)
-    
-        
-    
-      
-    
-    
+while not theGame.gameEnd:
+    print("Select an action, 1. Take Cards, 2. Take Routes, 3. Play Cards, 4. Forfeit, 5. See Map, 6. See Board, 7. See Your Routes")
+    playerResponse = int(input())
+    take_turn(theGame, playerResponse)
 
-  elif(playerResponse == 4):
-    theGame.Turn(4,0,0,0)
-  else:
-    print("Invalid Choice, give a valid selection")
-      
-    
+
+
+#model out when the game ends
+print("The Game is ending, last turn!")
+for i in range(theGame.players):
+    print("Select an action, 1. Take Cards, 2. Take Routes, 3. Play Cards, 4. Forfeit, 5. See Map, 6. See Board, 7. See Your Routes")
+    playerResponse = int(input())
+    take_turn(theGame, playerResponse)
+
+
+
+
