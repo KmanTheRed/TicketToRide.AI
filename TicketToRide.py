@@ -3,6 +3,92 @@ import networkx as nx
 import matplotlib.pyplot as plt
 from mpl_toolkits.basemap import Basemap
 
+def count_cards_by_color(cards):
+    color_counts = {}
+
+    for card in cards:
+        color = card.lower()  # Convert to lowercase for case-insensitivity
+        if color in color_counts:
+            color_counts[color] += 1
+        else:
+            color_counts[color] = 1
+
+    for color, count in color_counts.items():
+        print(f"You have {count} {color} cards.")
+
+scoringGuide = {
+    1:1,
+    2:2,
+    3:4,
+    4:7,
+    5:10,
+    6:15
+}
+routes = [ 
+    "Boston to Miami",
+    "Calgary to Phoenix",
+    "Calgary to Salt Lake City",
+    "Chicago to New Orleans",
+    "Chicago to Santa Fe",
+    "Dallas to New York",
+    "Denver to El Paso",
+    "Denver to Pittsburgh",
+    "Duluth to El Paso",
+    "Duluth to Houston",
+    "Helena to Los Angeles",
+    "Kansas City to Houston",
+    "Los Angeles to Chicago",
+    "Los Angeles to Miami",
+    "Los Angeles to New York",
+    "Montréal to Atlanta",
+    "Montréal to New Orleans",
+    "New York to Atlanta",
+    "Portland to Nashville",
+    "Portland to Phoenix",
+    "San Francisco to Atlanta",
+    "Sault St. Marie to Nashville",
+    "Sault St. Marie to Oklahoma City",
+    "Seattle to Los Angeles",
+    "Seattle to New York",
+    "Toronto to Miami",
+    "Vancouver to Montréal",
+    "Vancouver to Santa Fe",
+    "Winnipeg to Houston",
+    "Winnipeg to Little Rock"
+]
+route_points = {
+    "Boston to Miami": 12,
+    "Calgary to Phoenix": 13,
+    "Calgary to Salt Lake City": 7,
+    "Chicago to New Orleans": 7,
+    "Chicago to Santa Fe": 9,
+    "Dallas to New York": 11,
+    "Denver to El Paso": 4,
+    "Denver to Pittsburgh": 11,
+    "Duluth to El Paso": 10,
+    "Duluth to Houston": 8,
+    "Helena to Los Angeles": 8,
+    "Kansas City to Houston": 5,
+    "Los Angeles to Chicago": 16,
+    "Los Angeles to Miami": 20,
+    "Los Angeles to New York": 21,
+    "Montréal to Atlanta": 9,
+    "Montréal to New Orleans": 13,
+    "New York to Atlanta": 6,
+    "Portland to Nashville": 17,
+    "Portland to Phoenix": 11,
+    "San Francisco to Atlanta": 17,
+    "Sault St. Marie to Nashville": 8,
+    "Sault St. Marie to Oklahoma City": 9,
+    "Seattle to Los Angeles": 9,
+    "Seattle to New York": 22,
+    "Toronto to Miami": 10,
+    "Vancouver to Montréal": 20,
+    "Vancouver to Santa Fe": 13,
+    "Winnipeg to Houston": 12,
+    "Winnipeg to Little Rock": 11
+}
+
 city_coordinates = {
     'Seattle': (47.608013,-122.335167),
     'Portland': (45.5051, -122.6750),
@@ -41,6 +127,15 @@ city_coordinates = {
     'Calgary': (51.0447, -114.0719),
     'Vancouver': (49.2827, -123.1207),
 }
+def longest_path_length(graph, source, weight='weight'):
+    # Run Bellman-Ford algorithm
+    path_lengths = nx.single_source_bellman_ford_path_length(graph, source, weight=weight)
+
+    # Find the maximum length
+    max_length = min(path_lengths.values())
+
+    return max_length * -1
+
 edges = [ ('Vancouver', 'Seattle', {'color': 'Gray', 'length': 1}),
     ('Seattle', 'Vancouver', {'color': 'Gray', 'length': 1}), #Second Gray track
     ('Seattle', 'Portland', {'color': 'Gray', 'length': 1}),     
@@ -142,6 +237,8 @@ edges = [ ('Vancouver', 'Seattle', {'color': 'Gray', 'length': 1}),
   ('Phoenix', 'El Paso', {'color': 'Gray', 'length': 3}),
   ('Atlanta', 'Miami', {'color': 'Blue', 'length': 5})]
 
+
+
 def findIndex(originCity, destinationCity, color):
     # This function takes in the origin city, destination city, and color of the route.
     #It then finds the index of the route in the edges list.
@@ -189,14 +286,15 @@ def seeMap():
 
 
 class TicketToRideDeck:
-    def shuffleDeck(self, drawPile):
-      random.shuffle(drawPile)
-      self.train_car_cards = drawPile
+ 
     def __init__(self):
         # Initialize the train car deck with a list of cards
         self.train_car_cards = ["Red", "Yellow", "Green", "Blue", "Pink", "Black", "White", "Orange", "Rainbow"] * 12 + ["Rainbow","Rainbow"]
         # Shuffle the deck initially
         self.shuffleDeck(self.train_car_cards)
+    def shuffleDeck(self, drawPile):
+      random.shuffle(drawPile)
+      self.train_car_cards = drawPile
     def seeTopFive(self):
         for i in range(5):
             print(self.train_car_cards[i])
@@ -235,6 +333,7 @@ class Player:
         self.personalDeck = []
         self.personalRoutes = []
         self.personalTracks = []
+        self.score = 0
         self.G = nx.DiGraph()
         self.cities = city_coordinates
         self.trainCount = 45
@@ -248,8 +347,60 @@ class Player:
 
     def addEdges(self, originCity, destinationCity, color):
        k = edges[findIndex(originCity, destinationCity, color)] 
-       self.edges2.append(k)
+       self.personalTracks.append(k)
        self.G.add_edge(k)
+    
+    def calculateScore(self):
+        self.score = 0
+        for track in self.personalTracks:
+            self.score += scoringGuide[track[2]['length']]
+        return self.score
+    
+    def recursive(self, target, current):
+        if target == current:
+            return True
+        node_edges = self.G.edges(current)
+        for edge in node_edges:
+            if self.recursive(target, edge[1]):
+                return True
+        return False
+
+
+    def calculateRoutes(self):
+        for route in self.personalRoutes:
+            cities = route.split(" in ")
+            if(self.recursive(cities[0], cities[1]) == True):
+                self.score += route_points[route]
+            else:
+                self.score -= route_points[route]
+                    
+
+    def calculateLongestRoute(self):
+        G = nx.DiGraph()
+        nodes = self.cities
+        edges = self.personalRoutes
+        for j in range(len(edges)):
+            edges[j][2]['length'] *= -1
+        # Add nodes to the graph
+        G.add_nodes_from(nodes)
+
+        # Add edges to the graph
+        G.add_edges_from(edges)
+        maxDistanceLengths = []
+        for node in nodes:
+            maxDistanceLengths.append(longest_path_length(G, node))
+        return max(maxDistanceLengths)
+
+        
+            
+
+        
+
+
+
+
+
+
 
 
 
@@ -289,86 +440,32 @@ class Player:
 
 class Routes:
     def __init__(self):
-        self.route_points = {
-    "Boston to Miami": 12,
-    "Calgary to Phoenix": 13,
-    "Calgary to Salt Lake City": 7,
-    "Chicago to New Orleans": 7,
-    "Chicago to Santa Fe": 9,
-    "Dallas to New York": 11,
-    "Denver to El Paso": 4,
-    "Denver to Pittsburgh": 11,
-    "Duluth to El Paso": 10,
-    "Duluth to Houston": 8,
-    "Helena to Los Angeles": 8,
-    "Kansas City to Houston": 5,
-    "Los Angeles to Chicago": 16,
-    "Los Angeles to Miami": 20,
-    "Los Angeles to New York": 21,
-    "Montréal to Atlanta": 9,
-    "Montréal to New Orleans": 13,
-    "New York to Atlanta": 6,
-    "Portland to Nashville": 17,
-    "Portland to Phoenix": 11,
-    "San Francisco to Atlanta": 17,
-    "Sault St. Marie to Nashville": 8,
-    "Sault St. Marie to Oklahoma City": 9,
-    "Seattle to Los Angeles": 9,
-    "Seattle to New York": 22,
-    "Toronto to Miami": 10,
-    "Vancouver to Montréal": 20,
-    "Vancouver to Santa Fe": 13,
-    "Winnipeg to Houston": 12,
-    "Winnipeg to Little Rock": 11
-}
-        self.routes = [
-    "Boston to Miami",
-    "Calgary to Phoenix",
-    "Calgary to Salt Lake City",
-    "Chicago to New Orleans",
-    "Chicago to Santa Fe",
-    "Dallas to New York",
-    "Denver to El Paso",
-    "Denver to Pittsburgh",
-    "Duluth to El Paso",
-    "Duluth to Houston",
-    "Helena to Los Angeles",
-    "Kansas City to Houston",
-    "Los Angeles to Chicago",
-    "Los Angeles to Miami",
-    "Los Angeles to New York",
-    "Montréal to Atlanta",
-    "Montréal to New Orleans",
-    "New York to Atlanta",
-    "Portland to Nashville",
-    "Portland to Phoenix",
-    "San Francisco to Atlanta",
-    "Sault St. Marie to Nashville",
-    "Sault St. Marie to Oklahoma City",
-    "Seattle to Los Angeles",
-    "Seattle to New York",
-    "Toronto to Miami",
-    "Vancouver to Montréal",
-    "Vancouver to Santa Fe",
-    "Winnipeg to Houston",
-    "Winnipeg to Little Rock"
-]
+        self.routes = routes
         random.shuffle(self.routes)
+    
     def takeRoutes(self, choices):
-        if(choices == 1):
-          return [self.routes[0]]
-        elif(choices == 2):
-          return [self.routes[1]]
-        elif(choices == 3):
-          return [self.routes[2]]
-        elif(choices == 4):
-          return self.routes[0:1]
-        elif(choices == 5):
-          return self.routes[1:2]
-        elif(choices == 6):
-          return [self.routes[0], self.routes[2]]
-        elif(choices == 7):
-          return self.routes[0:2]
+        selected_routes = []
+
+        if choices == 1:
+            selected_routes.append(self.routes.pop(0))
+        elif choices == 2:
+            selected_routes.append(self.routes.pop(1))
+        elif choices == 3:
+            selected_routes.append(self.routes.pop(2))
+        elif choices == 4:
+            selected_routes.extend(self.routes.pop(0))
+            selected_routes.extend(self.routes.pop(0))
+        elif choices == 5:
+            selected_routes.append(self.routes.pop(1))
+            selected_routes.append(self.routes.pop(1))
+        elif choices == 6:
+            selected_routes.append(self.routes.pop(0))
+            selected_routes.append(self.routes.pop(1))
+        elif choices == 7:
+            selected_routes.append(self.routes.pop(0))
+            selected_routes.append(self.routes.pop(0))
+            selected_routes.append(self.routes.pop(0))
+        return selected_routes
 class Game:
     def __init__(self, num_players):
         self.gameEnd = False
@@ -380,13 +477,23 @@ class Game:
         self.gameDeck = TicketToRideDeck()
         self.gameBoard = Board()
         self.discardPile = []
+        self.gameScore = []
+    def beginning(self):
+        #function to distribute cards and Routes
+        for i in range(4):
+            for player in self.players:
+                if(i <= 2):
+                    player.personalRoutes.append(self.gameRoutes.routes.pop(0))
+                player.personalDeck.append(self.gameDeck.train_car_cards.pop(0))
     def Turn(self, choice, j, k, l):
         #Choice will either be draw cards, draw routes, or play cards
         if(choice == 1):
-          self.players[self.order].personalDeck.extend(self.gameDeck.takeCards(j, k))
+          temp = self.gameDeck.takeCards(j, k)
+          print(temp)
+          self.players[self.order].personalDeck += temp
         elif(choice == 2):
-
-          self.players[self.order].personalRoutes.extend(self.gameRoutes.takeRoutes(j))
+          temp = self.gameRoutes.takeRoutes(j)
+          self.players[self.order].personalRoutes += temp
         elif(choice == 3):
           self.players[self.order].trainCount -= (j + k)
           #when the player gets less than 2 trains mark the end of the game, and the loop will break
@@ -406,19 +513,48 @@ class Game:
             self.order = 0
         else:
             self.order += 1
+    def calculateScore(self):
+        longestRoute = []
+        for player in self.players:
+            player.calculateScore()
+            player.calculateRoutes()
+            longestRoute.append(player.calculateLongestRoute())
+            self.gameScore.append(player.score)
+        for index in range(len(longestRoute)):
+            if(longestRoute[index] == max(longestRoute)):
+                self.players[index].score += 10
+            self.gameScore.append(self.players[index].score)
+        return self.gameScore
+
+
+
+
 
 
 
 class Board:
     def __init__(self):
-        self.G = nx.DiGraph
+        self.G = nx.DiGraph()
         self.nodes = city_coordinates
+        self.edges1 = edges
         self.edges2 = []
         self.m  = Basemap(projection='merc', llcrnrlat=25, urcrnrlat=52, llcrnrlon=-130, urcrnrlon=-60, resolution='l')
 
-        for city, coordinates in city_coordinates.items():
+        for city, coordinates in self.nodes.items():
             x, y = self.m(coordinates[1], coordinates[0])
             self.G.add_node(city, pos=(x, y))
+        self.G.add_edges_from(self.edges2)
+    
+    def findIndex(self, originCity, destinationCity, color):
+    # This function takes in the origin city, destination city, and color of the route.
+    #It then finds the index of the route in the edges list.
+        for edge in self.edges1:
+            if (edge[0] == originCity and edge[1] == destinationCity) or \
+                (edge[0] == destinationCity and edge[1] == originCity):
+                if edge[2]['color'] == color:
+                    return self.edges1.index(edge)  
+            return -1
+
 
 
 
@@ -427,6 +563,7 @@ class Board:
        k = edges[findIndex(originCity, destinationCity, color)] 
        self.edges2.append(k)
        self.G.add_edge(k)
+
 
 
 
@@ -493,9 +630,14 @@ def take_turn(theGame, playerResponse):
             cities = choice.split(" to ")
             print("Which color would you like to use?")
             color = str(input())
+            #check if they have the route already
+            for edge10 in theGame.players[theGame.order].personalRoutes:
+                if((edge10[0] == cities[0] and edge10[1] == cities[1]) or (edge10[1] == cities[0] and edge10[0] == cities[1])):
+                    print("Invalid Choice, You already have this route secured, give a valid selection")
+                    break
             i = theGame.gameBoard.findIndex(cities[0], cities[1], color)
             if i != -1:
-                print("Track not found, try again")
+                print("Track not found/already purchased, try again")
             else:
                 print("How many cards and rainbows cards would you like to play? Format: X/Y")
                 b = True
@@ -514,6 +656,7 @@ def take_turn(theGame, playerResponse):
                             theGame.gameBoard.addEdges(
                                 edges[i][0], edges[i][1], edges[i][2]["color"]
                             )
+                            del theGame.gameBoard.edges2[i]
                         else:
                             print("Wrong number of cards, try again")
                     else:
@@ -528,14 +671,57 @@ def take_turn(theGame, playerResponse):
         theGame.gameBoard.seeBoard()
     elif playerResponse == 7:
         theGame.players[theGame.order].seeBoard()
+    elif playerResponse == 8:
+        print("Your Tickets are")
+        print(theGame.players[theGame.order].personalRoutes)
+    elif playerResponse == 9:
+        count_cards_by_color(theGame.players[theGame.order].personalDeck)
+    elif playerResponse == 10:
+        theGame.gameDeck.seeTopFive()
     else:
         print("Invalid Choice, give a valid selection")
+
+
 
 print("How many players are there?")
 players = int(input())
 theGame = Game(players)
+theGame.beginning()
+
+#Throw Away Routes
+
+for i in range(len(theGame.players)):
+    option = 0
+    while(option != 5):
+        print("Select an action before the game begins, 1. See Map, 2. See your Routes, 3. See your Cards, 4. See Top 5 Cards, 5. Move On")
+        option = int(input())
+        if(option > 6 or option < 1):
+            print("Give a valid selection")
+        else:
+            if(option == 1):
+                seeMap()
+            elif(option == 2):
+                print("Your Tickets are")
+                print(theGame.players[i].personalRoutes)
+            elif(option == 3):
+                count_cards_by_color(theGame.players[i].personalDeck)
+            elif(option == 4):
+                theGame.gameDeck.seeTopFive()
+            elif(option == 5):
+                pass
+
+for i in range(len(theGame.players)):
+    print("Would you like to throw away any routes?(Sample Response: '3'[-1 removes no routes])")
+    throwAway = int(input())
+    if(throwAway != -1):
+        removed_element  = theGame.players[i].personalRoutes.pop(throwAway-1)
+        theGame.gameRoutes.routes.append(removed_element)
+
+
+
+#Main Game Sequence
 while not theGame.gameEnd:
-    print("Select an action, 1. Take Cards, 2. Take Routes, 3. Play Cards, 4. Forfeit, 5. See Map, 6. See Board, 7. See Your Routes")
+    print("Select an action, 1. Take Cards, 2. Take Routes, 3. Play Cards, 4. Forfeit, 5. See Map, 6. See Board, 7. See Your Tracks, 8. See your Routes, 9. See your cards, 10. See Public Stack, 11, See Discard Pile")
     playerResponse = int(input())
     take_turn(theGame, playerResponse)
 
@@ -543,10 +729,18 @@ while not theGame.gameEnd:
 
 #model out when the game ends
 print("The Game is ending, last turn!")
-for i in range(theGame.players):
-    print("Select an action, 1. Take Cards, 2. Take Routes, 3. Play Cards, 4. Forfeit, 5. See Map, 6. See Board, 7. See Your Routes")
+for i in range(len(theGame.players)):
+    print("Select an action, 1. Take Cards, 2. Take Routes, 3. Play Cards, 4. Forfeit, 5. See Map, 6. See Board, 7. See Your Tracks, 8. See your Routes, 9. See your cards, 10. See Public Stack, 11, See Discard Pile")
     playerResponse = int(input())
     take_turn(theGame, playerResponse)
+
+
+theGame.calculateScore
+for i in range(len(theGame.gameScore)):
+    print("Player " + i + " had " + str(theGame.gameScore[i]) + " points!")
+
+    
+    
 
 
 
