@@ -300,7 +300,7 @@ class TicketToRideDeck:
             print(self.train_car_cards[i])
     def takeCards(self, j, k):
         #variables j and k specify the type of draw
-        if(j or k > 6 or j or k < 0):
+        if((j and k) > 6 or (j and k) < 0):
             return []
         if len(self.train_car_cards) == 5:
             return []
@@ -310,24 +310,28 @@ class TicketToRideDeck:
                 if card == "Rainbow":
                     self.train_car_cards.remove(card)
                     return [card]
+            if(j or k == 0):
+                return self.train_car_cards.pop(j+k)
             return []
-        if(j == 6 and k == 6):
-            newCards = [self.train_car_cards[5]]
-            del self.train_car_cards[5]
-            newCards.append(self.train_car_cards[5])
-            del self.train_car_cards[5]
-            return newCards
-        if(j == 0 or k == 0):
-            newCards = [self.train_car_cards[j+k-1]]
-            return newCards
-        newCards = [self.train_car_cards[j-1]]
-        del self.train_car_cards[j-1]
-        if(j < k):
-            newCards.append(self.train_car_cards[k-2])
-            del self.train_car_cards[k-2]
+        #if only one card is specified
+        if(j or k == 0):
+                return self.train_car_cards.pop(j+k)
+        #if they specify the hidden cards
+        if ((j == 5 or k == 5) and (j == 6 or k == 6)):
+            tempCards = self.train_car_cards[5:6]
+            return tempCards
+        tempDeck = []
+        tempDeck.append(self.train_car_cards.pop(j))
+        if(j > k):
+            tempDeck.append(self.train_car_cards.pop(k))
         else:
-            newCards.append(self.train_car_cards[k-1])
-            del self.train_car_cards[k-1]
+            tempDeck.append(self.train_car_cards.pop(k-1))
+
+        return tempDeck
+        
+
+   
+        
 class Player:
     def __init__(self):
         self.personalDeck = []
@@ -562,6 +566,7 @@ class Board:
     def addEdges(self, originCity, destinationCity, color):
        k = edges[findIndex(originCity, destinationCity, color)] 
        self.edges2.append(k)
+       self.edges1.remove(k)
        self.G.add_edge(k)
 
 
@@ -651,10 +656,10 @@ def take_turn(theGame, playerResponse):
                 while b:
                     choice = str(input())
                     if (
-                        theGame.players[theGame.order].count(color) > choice[0]
-                        and theGame.players[theGame.order].count("Rainbow") > choice[2]
+                        theGame.players[theGame.order].personalDeck.count(color) >= int(choice[0])
+                        and theGame.players[theGame.order].personalDeck.count("Rainbow") >= int(choice[2])
                     ):
-                        if int(choice[0]) + int(choice[2]) == theGame.gameBoard.edges[i][2]["length"]:
+                        if int(choice[0]) + int(choice[2]) == theGame.gameBoard.edges1[i][2]["length"]:
                             b = False
                             theGame.Turn(3, i, 0, 0)
                             theGame.players[theGame.order].addEdges(
@@ -663,7 +668,7 @@ def take_turn(theGame, playerResponse):
                             theGame.gameBoard.addEdges(
                                 edges[i][0], edges[i][1], edges[i][2]["color"]
                             )
-                            del theGame.gameBoard.edges2[i]
+                            
                         else:
                             print("Wrong number of cards, try again")
                     else:
@@ -742,7 +747,7 @@ for i in range(len(theGame.players)):
     take_turn(theGame, playerResponse)
 
 
-theGame.calculateScore
+theGame.calculateScore()
 for i in range(len(theGame.gameScore)):
     print("Player " + i + " had " + str(theGame.gameScore[i]) + " points!")
 
