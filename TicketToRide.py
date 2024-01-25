@@ -603,10 +603,17 @@ def take_turn(theGame, playerResponse):
         # Logic for taking cards
         print("Which cards would you like to take?(Format: X or X_Y)")
         choice = str(input())
-        if len(choice) == 1:
-            theGame.Turn(1, int(choice), 0, 0)
+        if len(choice) == 1 and theGame.gameDeck.train_car_cards[int(choice)-1] != "Rainbow":
+            temp = theGame.gameDeck.train_car_cards.pop(int(choice)-1)
+            theGame.players[theGame.order].personalDeck.append(temp)
+            theGame.gameDeck.seeTopFive()
+            choice = str(input())
+            print("What second card would you like to take?")
+            theGame.Turn(1, int(choice[0])-1, 0, 0)
+        elif len(choice) == 1:
+            theGame.Turn(1, int(choice[0])-1, 0, 0)
         else:
-            theGame.Turn(1, int(choice[0]), int(choice[2]), 0)
+            theGame.Turn(1, int(choice[0])-1, int(choice[2])-1, 0)
     elif playerResponse == 2:
         # Logic for taking routes
         print("Which routes would you like to take?(Format: X, X_Y, or X_Y_Z")
